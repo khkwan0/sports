@@ -1,11 +1,12 @@
 <?php
+require('key_file.php');
     date_default_timezone_set('America/Los_Angeles');
     truncate_latest();
     $sport = 'mlb';
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, "https://jsonodds.com/api/odds/".$sport);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('JsonOdds-API-Key:14b51561-2341-4666-b654-b7ec84a2676a'));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array($jodds_key));
 
     $res = curl_exec($ch);
     $odds = json_decode($res);
@@ -64,7 +65,7 @@
     curl_close($ch);
 
     function truncate_latest() {
-        $dbh = mysqli_connect('localhost','chiefaction','khkwan0','chiefaction');
+        $dbh = mysqli_connect('localhost','chiefaction',$db_password,'chiefaction');
         $query = 'truncate latest';
         mysqli_query($dbh, $query);
         mysqli_close($dbh);
@@ -92,7 +93,7 @@
                             'DrawLine'                  =>  $event->Odds[0]->DrawLine,
                             'timestamp'                 =>  date('Y-m-d H:i:s', time()),
                             );
-                    $dbh = mysqli_connect('localhost','chiefaction','khkwan0','chiefaction');
+                    $dbh = mysqli_connect('localhost','chiefaction',$db_password,'chiefaction');
                     if ($dbh) {
                         $query2 = 'insert into latest values(';
                         $query = 'insert into odds values(';

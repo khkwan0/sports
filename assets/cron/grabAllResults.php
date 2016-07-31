@@ -1,8 +1,10 @@
 <?php
+
+require('key_file.php');
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('JsonOdds-API-Key:14b51561-2341-4666-b654-b7ec84a2676a'));
-    $dbh = mysqli_connect('localhost','chiefaction','khkwan0','chiefaction');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array($jodds_key));
+    $dbh = mysqli_connect('localhost','chiefaction',$db_password,'chiefaction');
     if ($dbh) {
 
         $sport = 'nfl';

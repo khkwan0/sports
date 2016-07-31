@@ -1,10 +1,12 @@
 <?php
 
+require('key_file');
+
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('JsonOdds-API-Key:14b51561-2341-4666-b654-b7ec84a2676a'));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array($jodds_key));
 
-        $dbh = mysqli_connect('localhost','chiefaction','khkwan0','chiefaction');
+        $dbh = mysqli_connect('localhost','chiefaction',$db_password,'chiefaction');
         if ($dbh) {
             $active_bets = getActiveBets();
             if (isset($active_bets) && count($active_bets)) {
@@ -201,7 +203,7 @@
 
     function getActiveBets() {
         $bets = array();
-        $dbh = mysqli_connect('localhost','chiefaction','khkwan0','chiefaction');
+        $dbh = mysqli_connect('localhost','chiefaction',$db_password,'chiefaction');
         $query = 'select * from bets where active=1';
         $res = mysqli_query($dbh, $query);
         while ($row = mysqli_fetch_assoc($res)) {

@@ -1,6 +1,6 @@
 <?php
-
-$dbh = mysqli_connect('localhost','chiefaction','khkwan0','chiefaction');
+require('key_file.php');
+$dbh = mysqli_connect('localhost','chiefaction',$db_password,'chiefaction');
 if ($dbh) {
     $query = 'select * from users';
     $res = mysqli_query($dbh, $query);
