@@ -1,5 +1,5 @@
 <?php
-require('key_file.php');
+require 'key_file.php';
     date_default_timezone_set('America/Los_Angeles');
     truncate_latest();
     $sport = 'mlb';
@@ -54,17 +54,25 @@ require('key_file.php');
     $odds = json_decode($res);
     saveOdds($odds, $sport);
 
-/*  stopped via request from Leon 28Jan2016
+/*  stopped via request from Leon 28Jan2016 */
+/* restarted by Ken 03Agf2016 */
     $sport = 'tennis';
     curl_setopt($ch, CURLOPT_URL, "https://jsonodds.com/api/odds/".$sport);
     $res = curl_exec($ch);
     $odds = json_decode($res);
     saveOdds($odds, $sport);
-    */
+//    */
+
+    $sport = 'horse-racing';
+    curl_setopt($ch, CURLOPT_URL, "https://jsonodds.com/api/odds/".$sport);
+    $res = curl_exec($ch);
+    $odds = json_decode($res);
+    saveOdds($odds, $sport);
 
     curl_close($ch);
 
     function truncate_latest() {
+        global $db_password;
         $dbh = mysqli_connect('localhost','chiefaction',$db_password,'chiefaction');
         $query = 'truncate latest';
         mysqli_query($dbh, $query);
@@ -72,25 +80,33 @@ require('key_file.php');
     }
 
     function saveOdds($odds, $sport = '') {
+        global $db_password;
         if ($sport) {
             if (isset($odds) && count($odds)) {
                 foreach($odds as $event) {
+                    $datetime = new DateTime(date('Y-m-d H:i:s', strtotime($event->MatchTime)), new DateTimeZone("Etc/GMT+1"));
+                    $datetime->setTimezone(new DateTimeZone("America/Los_Angeles"));
+                    if ($event->Odds[0]->OddType === 'Game' || !isset($event->Odds[0]->OddType)) {
+                        $odd_type = 0;
+                    } else {
+                        $odd_type = 1;
+                    }
                     $data = array(
-                            'id'                    =>  $event->Odds[0]->ID,
+                            'id'                    =>  $event->Odds[$odd_type]->ID,
                             'event_id'              =>  $event->ID,
                             'sport'                 =>  $event->Sport,
-                            'MatchTime'             =>  date('Y-m-d H:i:s',strtotime($event->MatchTime)),
+                            'MatchTime'             =>  $datetime->format('Y-m-d H:i:s'),
                             'HomeTeam'              =>  $event->HomeTeam,
                             'AwayTeam'              =>  $event->AwayTeam,
-                            'MoneyLineHome'         =>  $event->Odds[0]->MoneyLineHome,
-                            'MoneyLineAway'         =>  $event->Odds[0]->MoneyLineAway,
-                            'PointSpreadHome'       =>  $event->Odds[0]->PointSpreadHome,
-                            'PointSpreadAway'       =>  $event->Odds[0]->PointSpreadAway,
-                            'PointSpreadHomeLine'       =>  $event->Odds[0]->PointSpreadHomeLine,
-                            'PointSpreadAwayLine'       =>  $event->Odds[0]->PointSpreadAwayLine,
-                            'OverLine'                  =>  $event->Odds[0]->OverLine,
-                            'UnderLine'                 =>  $event->Odds[0]->UnderLine,
-                            'DrawLine'                  =>  $event->Odds[0]->DrawLine,
+                            'MoneyLineHome'         =>  $event->Odds[$odd_type]->MoneyLineHome,
+                            'MoneyLineAway'         =>  $event->Odds[$odd_type]->MoneyLineAway,
+                            'PointSpreadHome'       =>  $event->Odds[$odd_type]->PointSpreadHome,
+                            'PointSpreadAway'       =>  $event->Odds[$odd_type]->PointSpreadAway,
+                            'PointSpreadHomeLine'       =>  $event->Odds[$odd_type]->PointSpreadHomeLine,
+                            'PointSpreadAwayLine'       =>  $event->Odds[$odd_type]->PointSpreadAwayLine,
+                            'OverLine'                  =>  $event->Odds[$odd_type]->OverLine,
+                            'UnderLine'                 =>  $event->Odds[$odd_type]->UnderLine,
+                            'DrawLine'                  =>  $event->Odds[$odd_type]->DrawLine,
                             'timestamp'                 =>  date('Y-m-d H:i:s', time()),
                             );
                     $dbh = mysqli_connect('localhost','chiefaction',$db_password,'chiefaction');
@@ -108,8 +124,8 @@ require('key_file.php');
                             }
                             $cnt++;
                         }
-                        $query2 .= ',0,'.$event->Odds[0]->TotalNumber.')';
-                        $query .= ',0,'.$event->Odds[0]->TotalNumber.')';
+                        $query2 .= ',0,'.$event->Odds[$odd_type]->TotalNumber.')';
+                        $query .= ',0,'.$event->Odds[$odd_type]->TotalNumber.')';
                         $query .= ' on duplicate key update MoneyLineHome="'.$data['MoneyLineHome'].'"'; 
                         $query .= ', MoneyLineAway="'.$data['MoneyLineAway'].'"';
                         $query .= ', PointSpreadHome="'.$data['PointSpreadHome'].'"';
@@ -119,7 +135,7 @@ require('key_file.php');
                         $query .= ', OverLine="'.$data['OverLine'].'"';
                         $query .= ', UnderLine="'.$data['UnderLine'].'"';
                         $query .= ', DrawLine="'.$data['DrawLine'].'"';
-                        $query .= ', TotalNumber="'.$event->Odds[0]->TotalNumber.'"';
+                        $query .= ', TotalNumber="'.$event->Odds[$odd_type]->TotalNumber.'"';
                         $query .= ', timestamp="'.date('Y-m-d H:i:s', time()).'"';
                         $res = mysqli_query($dbh, $query);
                         $res2 = mysqli_query($dbh, $query2);
